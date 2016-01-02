@@ -1,10 +1,10 @@
 #! /usr/bin/env Rscript
 
-library(simcross, lib.loc = "~/lib/R")
+library(simcross)
 library(plyr)
 library(optparse)
 
-source("~/lib/util/R/simcross.R")
+source("simcross.R")
 
 opts <- list( make_option( c("-n","--nruns"), type = "integer", default = 1,
 						   help = "number of simulation runs" ),
@@ -18,7 +18,7 @@ print(args)
 
 ## simulate HR lines
 hr.rez <- ldply(1:(args$nruns), function(i) {
-	
+
 	#message("--- run ", i, " ---")
 	ped <- outbred.from.founders(ngen = 1, npairs = 10, nfounders = 4, design = "nosib")
 	geno <- sim.until.fix(ped, npairs = 10, founders = c(1:3,5:7))
@@ -26,7 +26,7 @@ hr.rez <- ldply(1:(args$nruns), function(i) {
 	summ$run <- i
 	summ$batch <- args$batch
 	return(summ)
-	
+
 }, .progress = "text")
 
 ## save result

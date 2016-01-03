@@ -1,0 +1,5 @@
+popsize: 100
+base_tr: 0.5
+theta: 5.0
+fitness: [1.0, 1.0, 0.8, 1.0]
+burnin: simulations/init.n100.t50.out

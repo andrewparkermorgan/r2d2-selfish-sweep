@@ -10,6 +10,8 @@ import os
 import sys
 import numpy as np
 import copy
+import argparse
+import yaml
 from collections import Counter
 
 import ms
@@ -456,29 +458,54 @@ def stem_and_leaf(d):
 
 if __name__ == "__main__":
 
-	pop = Population(100, base_tr = 0.5, theta = 5, s = [1.0,1.0,0.8,1.0])
+	parser = argparse.ArgumentParser(description =	"Simulation of a sex-limited meiotic drive system with neutral modifiers" + \
+													" and arbitrary fitness for the drive allele.")
+	parser.add_argument(	"-c","--config", type = argparse.FileType("rU"),
+							required = True,
+							help = "file/stream with simlation parameters in YAML format")
+	parser.add_argument(	"-n","--nruns", type = int,
+							default = 100,
+							help = "number of trajectories to follow to fixation [default: %(default)d]" )
+	parser.add_argument(	"-o","--out",
+							default = None,
+							help = "prefix added to output files [default: None]" )
+	args = parser.parse_args()
 
-	burnin = ms.MsReader(open("init.n100.t5.out", "r"))
+	config = yaml.load(args.config)
+
+	pop = Population(	config["popsize"], base_tr = config["base_tr"],
+						theta = config["theta"], s = config["fitness"])
+
+	burnin = ms.MsReader(open(config["burnin"], "r"))
 	pop.init_from_ms(burnin)
 	pop.init_responder(1)
 	sys.stderr.write(str(pop) + "\n")
 	sys.stdout.write(pop.as_ms(header_only = True))
-	pop.init_modifiers([ (0.01, 0, 0.5, 0.15) ]) # freq,chrom,position(cM),beta
 
-	freqs = open("freq.txt", "w")
-	stats = open("summary.txt", "w")
+	if "modifiers" in config:
+		for m in config["modifiers"]:
+			pop.init_modifiers([ (	config["modifiers"][m]["freq"],
+									config["modifiers"][m]["chrom"],
+									config["modifiers"][m]["pos"],
+									config["modifiers"][m]["effsize"] ) ])
+
+	prefix = ""
+	if args.out:
+		prefix += args.out + "."
+
+	#freqs = open(prefix + "freq.txt", "w")
+	stats = open(prefix + "summary.txt", "w")
 	print("fixed","generations","attempts", file = stats)
 
 	#afs = []
 	#def report_modifiers(run, outfile = None):
-		#afs.append( (run.pop.get_freq(0, 0.5), run.pop.get_driver_freq()) )
-		#if outfile:
-		#	print(run.generation, run.pop.get_freq(0, 0.5), run.pop.get_driver_freq(), file = outfile)
+	#	afs.append( (run.pop.get_freq(0, 0.5), run.pop.get_driver_freq()) )
+	#	print(run.generation, run.pop.get_freq(0, 0.5), run.pop.get_driver_freq(), file = outfile)
 
 	fix_time = []
 	nfix = 0
 	ntries = 0
-	while nfix < 100:
+	while nfix < args.nruns:
 		traj = Trajectory(copy.deepcopy(pop))
 		rez = traj.evolve(verbose = True)
 		if rez:
@@ -488,9 +515,9 @@ if __name__ == "__main__":
 			#print(stem_and_leaf(traj.pop.get_seg_sites().values()))
 			print(traj.pop.as_ms(header = False))
 			print(rez, traj.generation, ntries + 1, file = stats)
-			#print("generation","modifier","driver", file = freqs)
+			#print("generation","modifier","driver","run", file = freqs)
 			#for i in range(0, len(afs)):
-			#	print(i, afs[i][0], afs[i][1], file = freqs)
+			#	print(i, afs[i][0], afs[i][1], ,file = freqs)
 			ntries = 0
 		else:
 			ntries += 1

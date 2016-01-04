@@ -30,4 +30,4 @@ hr.rez <- ldply(1:(args$nruns), function(i) {
 }, .progress = "text")
 
 ## save result
-save(hr.rez, file = file.path(args$outdir, paste0("hr.batch", args$batch, ".Rdata")))
+save(hr.rez, file = file.path(args$outdir, "HR.sims.Rdata")))

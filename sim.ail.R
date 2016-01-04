@@ -28,4 +28,4 @@ ail.rez <- ldply(1:(args$nruns), function(i) {
 
 }, .progress = "text")
 
-save(ail.rez, file = file.path(args$outdir, paste0("ail.batch", args$batch, ".Rdata")))
+save(ail.rez, file = file.path(args$outdir, "AIL.sims.Rdata")))
